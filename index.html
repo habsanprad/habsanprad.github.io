@@ -38876,6 +38876,13 @@ const diffMermaidGraphs = (prevGraph, currGraph) => {
     restyledEdges
   };
 };
+
+// The orange a line is drawn in on the map. #F97316 is the engineer's role
+// colour and stays that, but as a stroke on the #fcfbf8 field it measures
+// 2.71:1 -- under the 3:1 WCAG 2.2 wants of a meaningful graphic, and it is the
+// colour of the arrows showing what changed this beat, the ones a learner is
+// most meant to find. #EA580C is 3.44:1. Fills and chips are unaffected.
+const MAP_HIGHLIGHT_STROKE = '#EA580C';
 const prettyNodeLabel = (nodeId, rhs) => {
   if (!rhs) return nodeId;
   const match = String(rhs).match(/^\s*\["([\s\S]*)"\]\s*$/);
@@ -39033,12 +39040,12 @@ const applyNewStepHighlights = (code, diff) => {
   const highlightEdges = [...new Set(diff?.addedEdges || [])].filter(n => Number.isFinite(n));
   if (highlightNodes.length === 0 && highlightEdges.length === 0) return code;
   const lines = [String(code).trimEnd(), ''];
-  lines.push('  classDef newStep fill:#FFEDD5,stroke:#F97316,color:#7C2D12,stroke-width:2px;');
+  lines.push(`  classDef newStep fill:#FFEDD5,stroke:${MAP_HIGHLIGHT_STROKE},color:#7C2D12,stroke-width:2px;`);
   for (const group of chunk(highlightNodes, 10)) {
     lines.push(`  class ${group.join(',')} newStep;`);
   }
   for (const idx of highlightEdges) {
-    lines.push(`  linkStyle ${idx} stroke:#F97316,stroke-width:3px;`);
+    lines.push(`  linkStyle ${idx} stroke:${MAP_HIGHLIGHT_STROKE},stroke-width:3px;`);
   }
   return lines.join('\n');
 };
@@ -39736,18 +39743,24 @@ const VIEWBOX = Object.freeze({
 // 200, 92 of 140) and the type fills the box, which trebles the rendered label
 // without moving a single node: the pitch, and therefore every lane, is
 // untouched.
+// A box is narrower than the column it sits in, and the difference is the arrow.
+// At 172 the gap was 28 units, drawing a 14px arrow under a 1px stroke on a
+// 1440px screen -- mostly arrowhead, and easy to miss. 160 buys 40 units without
+// widening the drawing, so none of it is paid for in type size; the widest label
+// (Gold) still fills only 92% of its box. Widening the column instead would have
+// cost 7% of the label size at every width.
 const GRID = Object.freeze({
   originX: 60,
   originY: 84,
   colGap: 200,
   rowGap: 140,
-  nodeWidth: 172,
+  nodeWidth: 160,
   nodeHeight: 86,
   overlayWidth: 160,
   overlayHeight: 74
 });
 // Bands have to stay clear of the neighbouring column's band: a box plus both
-// its paddings must fit inside one column (172 + 20 < 200) and one row
+// its paddings must fit inside one column (160 + 20 < 200) and one row
 // (86 + 12 < 140 - 38). The top padding also has to hold a band title that has
 // been wrapped onto two lines rather than shrunk.
 const ZONE_PADDING = Object.freeze({
@@ -40984,7 +40997,7 @@ const MermaidViewer = React.memo(({
     const items = [{
       label: 'New this beat',
       fill: '#FFEDD5',
-      stroke: '#F97316',
+      stroke: MAP_HIGHLIGHT_STROKE,
       borderWidth: 2
     }];
     const isRetired = node => node.classes.has('dim') || node.classes.has('lensDim');
@@ -41175,34 +41188,34 @@ const MermaidViewer = React.memo(({
     viewBox: "0 0 10 10",
     refX: "9",
     refY: "5",
-    markerWidth: "6",
-    markerHeight: "6",
+    markerWidth: "5",
+    markerHeight: "5",
     orient: "auto-start-reverse"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M 0 0 L 10 5 L 0 10 z",
-    fill: "#b0aea5"
+    fill: "#7d7869"
   })), /*#__PURE__*/React.createElement("marker", {
     id: "arrow-dim",
     viewBox: "0 0 10 10",
     refX: "9",
     refY: "5",
-    markerWidth: "6",
-    markerHeight: "6",
+    markerWidth: "5",
+    markerHeight: "5",
     orient: "auto-start-reverse"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M 0 0 L 10 5 L 0 10 z",
-    fill: "#cec9c0"
+    fill: "#8a8478"
   })), /*#__PURE__*/React.createElement("marker", {
     id: "arrow-highlight",
     viewBox: "0 0 10 10",
     refX: "9",
     refY: "5",
-    markerWidth: "7",
-    markerHeight: "7",
+    markerWidth: "5.5",
+    markerHeight: "5.5",
     orient: "auto-start-reverse"
   }, /*#__PURE__*/React.createElement("path", {
     d: "M 0 0 L 10 5 L 0 10 z",
-    fill: "#F97316"
+    fill: MAP_HIGHLIGHT_STROKE
   }))), /*#__PURE__*/React.createElement("rect", {
     x: "0",
     y: "0",
@@ -41262,7 +41275,11 @@ const MermaidViewer = React.memo(({
       })
     }, line))));
   })), edges.map(edge => {
-    const stroke = edge.isHighlighted ? '#F97316' : edge.isDim ? '#cec9c0' : '#b0aea5';
+    // #b0aea5 on the #fcfbf8 field is 2.1:1, under the 3:1 WCAG 2.2 asks of a
+    // graphic that carries meaning (SC 1.4.11) -- and an arrow is the only
+    // thing on this map that says which way data moves. These are 4.2:1 and
+    // 3.6:1, and the legacy route is still the lighter of the two.
+    const stroke = edge.isHighlighted ? MAP_HIGHLIGHT_STROKE : edge.isDim ? '#8a8478' : '#7d7869';
     const marker = edge.isHighlighted ? 'url(#arrow-highlight)' : edge.isDim ? 'url(#arrow-dim)' : 'url(#arrow-default)';
     return /*#__PURE__*/React.createElement("g", {
       key: `edge-${edge.key}-${edge.index}`
@@ -41270,19 +41287,12 @@ const MermaidViewer = React.memo(({
       d: edge.d,
       fill: "none",
       stroke: stroke,
-      strokeWidth: edge.isHighlighted ? 3 : edge.isDim ? 1.6 : 2,
+      strokeWidth: edge.isHighlighted ? 3.6 : edge.isDim ? 2.2 : 2.8,
       strokeDasharray: edge.isDashed ? '7 6' : undefined,
       markerEnd: marker,
       strokeLinecap: "round",
       strokeLinejoin: "round"
-    }), edge.label ? /*#__PURE__*/React.createElement("text", {
-      x: edge.mx,
-      y: edge.my - (projector ? 12 : 6),
-      textAnchor: "middle",
-      fontSize: type.edgeFont,
-      fontWeight: "600",
-      fill: "#6a6a68"
-    }, edge.label) : null);
+    }));
   }), orderedNodes.map(node => {
     // 'lensDim' is injected by the role lens; 'dim' is authored in the track
     // markdown to mark a node as retired but still part of the story.
@@ -41305,7 +41315,7 @@ const MermaidViewer = React.memo(({
     // it reads as retired, which is the change that matters.
     const isChanged = !isNew && !isDim && changedNodeIds.has(node.id);
     const fill = isNew ? '#FFEDD5' : isChanged ? '#fdf6e7' : isOverlay ? '#fdfcf9' : isDim ? '#fbfaf7' : '#ffffff';
-    const stroke = isNew ? '#F97316' : isChanged ? '#c99a3f' : isOwned ? ownedStrokeColor : isDim ? '#c9c3b9' : '#e8e6dc';
+    const stroke = isNew ? MAP_HIGHLIGHT_STROKE : isChanged ? '#c99a3f' : isOwned ? ownedStrokeColor : isDim ? '#c9c3b9' : '#e8e6dc';
     const textColor = isOverlay ? '#5f574d' : isDim ? '#6f665c' : '#141413';
     const lineHeight = isOverlay ? type.overlayLineHeight : type.lineHeight;
     const titleY = node.cy - (node.lines.length - 1) * lineHeight / 2;
@@ -41374,7 +41384,21 @@ const MermaidViewer = React.memo(({
       x: node.cx,
       y: titleY
     }, node.id)));
-  }))))), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("g", {
+    "data-edge-labels": "true"
+  }, edges.filter(edge => edge.label).map(edge => /*#__PURE__*/React.createElement("text", {
+    key: `edge-label-${edge.key}-${edge.index}`,
+    x: edge.mx,
+    y: edge.my - (projector ? 12 : 6),
+    textAnchor: "middle",
+    fontSize: type.edgeFont,
+    fontWeight: "600",
+    fill: "#6a6a68",
+    stroke: "#fcfbf8",
+    strokeWidth: 3.5,
+    paintOrder: "stroke",
+    strokeLinejoin: "round"
+  }, edge.label)))))), /*#__PURE__*/React.createElement("div", {
     "data-map-controls": "true",
     className: "absolute top-4 right-4 bg-white/92 backdrop-blur border border-[#e8e6dc] rounded-lg shadow-sm p-1.5 flex items-center gap-1.5"
   }, /*#__PURE__*/React.createElement("button", {
