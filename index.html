@@ -489,8 +489,8 @@
   .h-20 {
     height: calc(var(--spacing) * 20);
   }
-  .h-\[50vh\] {
-    height: 50vh;
+  .h-\[56vh\] {
+    height: 56vh;
   }
   .h-auto {
     height: auto;
@@ -1986,14 +1986,14 @@
       height: 100%;
     }
   }
-  .lg\:w-2\/5 {
+  .lg\:w-1\/3 {
     @media (width >= 64rem) {
-      width: calc(2/5 * 100%);
+      width: calc(1/3 * 100%);
     }
   }
-  .lg\:w-3\/5 {
+  .lg\:w-2\/3 {
     @media (width >= 64rem) {
-      width: calc(3/5 * 100%);
+      width: calc(2/3 * 100%);
     }
   }
   .lg\:shrink {
@@ -21643,7 +21643,7 @@ const CATALOG_BY_ID = {
     "short": "Governance — Purview/RBAC",
     "zone": "governanceDomain",
     "owner": "dba",
-    "firstBeat": "13.1",
+    "firstBeat": "12.1",
     "outlineIds": ["core.roles.dba", "core.storage.datastores"],
     "docs": [{
       "title": "Explore data roles and services",
@@ -21662,7 +21662,7 @@ const CATALOG_BY_ID = {
     "short": "Ops — Key Vault/Monitor",
     "zone": "governanceDomain",
     "owner": "dba",
-    "firstBeat": "13.1",
+    "firstBeat": "12.2",
     "outlineIds": ["core.roles.dba"],
     "docs": [{
       "title": "Explore data roles and services",
@@ -30281,20 +30281,21 @@ const beatsData = [{
   story: ["Aurora can already ingest, transform, and report. The new problem is coordination: every extra tool boundary slows fixes and gives KPI drift another place to hide.", "That is why **Microsoft Fabric** becomes attractive in the business story. Aurora is not buying a new pattern; it is pulling trusted steps into one governed home while the migration is still manageable."],
   exam: ["Exam hint: if the scenario is really asking “how do we reduce tool sprawl and speed up collaboration,” it’s pointing at an integrated surface (SaaS) rather than “one more point service.”", "> > **Cue:** “One workspace”, “reduce tool sprawl”, “fewer handoffs” → **Microsoft Fabric**.", "> > **Cue:** “One logical home for curated analytics data” → **OneLake**.", "> > **Cue:** “Schedule/copy/dependencies/monitored runs” → **(Fabric) Data Factory pipelines** (or ADF). This is **orchestration**, not transformation.", "Why‑not distractor: Fabric consolidates analytics surfaces; it **doesn’t replace OLTP databases** and it **doesn’t remove governance/ops work**."],
   teaching: {
-    minutes: 6,
+    minutes: 7,
     story: 47,
     notes: 39,
     questions: 150,
-    map: 135,
+    map: 200,
     questionsAsked: 2,
     questionCount: 6,
-    mapChanges: 10,
+    mapChanges: 14,
     introduces: ["fabric", "onelake"],
-    needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.2", "12.1"]
+    needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.1", "9.2", "10.1", "10.2", "12.1"]
   },
   caption: "Architecture state after Beat 13.1.",
   diagram: `flowchart LR
   %% Beat 13.1
+  %% retire: bronze, silver, gold, delta, spark
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
@@ -30303,23 +30304,16 @@ const beatsData = [{
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
   etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
   warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
   synsql["Synapse SQL<br/>Analytical serving"]
   reports["Reports<br/>Business outputs"]
-	  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
+  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
+  adf --> onelake
   apps --> sqlplat
   apps -.-> onprem
   cloudapp --> cosmos
@@ -30328,30 +30322,22 @@ const beatsData = [{
   cloudapp --> streaming
   cosmos --> adf
   etl --> warehouse
-  gold --> synsql
+  onelake --> synsql
   semantic --> pbi
-  silver --> delta
-  delta --> gold
-  spark --> silver
   sqlplat --> adf
   storage --> adf
   sqlplat --> etl
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
+  streamproc -->|processed output| onelake
   synsql --> semantic
   warehouse -.-> reports
-
   adf -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
   classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
+  class reports,etl,warehouse,onprem dim;
   class apps,sqlplat,fabric,onelake lensOwned;`
 }, {
   type: "beat",
@@ -30373,41 +30359,31 @@ const beatsData = [{
     story: 132,
     notes: 41,
     questions: 150,
-    map: 110,
+    map: 125,
     questionsAsked: 2,
     questionCount: 7,
-    mapChanges: 9,
+    mapChanges: 10,
     introduces: [],
-    needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.1", "9.2", "10.2", "11.1", "11.2", "13.1"]
+    needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.2", "10.2", "11.1", "11.2", "13.1"]
   },
   caption: "Architecture state after Beat 13.2.",
   diagram: `flowchart LR
   %% Beat 13.2
-  %% retire: onprem, etl, warehouse, reports
+  %% retire: etl, warehouse, reports, onprem
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
-  onprem["On-Prem SQL<br/>Legacy (retired)"]
   sqlplat["SQL Platform<br/>VM / MI / SQL DB"]
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
-  etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
-  warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
-  synsql["Synapse SQL<br/>Analytical serving"]
-  reports["Reports<br/>Business outputs"]
+  synsql["Fabric Warehouse (SQL endpoint)<br/>T-SQL analytical serving"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
   apps --> sqlplat
-  apps -.-> onprem
   cloudapp --> cosmos
   cloudapp --> storage
   cloudapp --> sqlplat
@@ -30415,36 +30391,21 @@ const beatsData = [{
   sqlplat --> adf
   storage --> adf
   cosmos --> adf
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
-  spark --> silver
-  silver --> delta
-  delta --> gold
-  gold --> synsql
+  streamproc -->|processed output| onelake
+  adf --> onelake
+  onelake --> synsql
   synsql --> semantic
   semantic --> pbi
-  sqlplat -.-> etl
-  etl -.-> warehouse
-  warehouse -.-> reports
-
   adf -.-> fabric
   streamproc -.-> fabric
-  spark -.-> fabric
+  onelake -.-> fabric
   synsql -.-> fabric
   semantic -.-> fabric
   pbi -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
-  classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
   class apps,sqlplat,fabric,onelake lensOwned;`
 }];
@@ -31881,20 +31842,21 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["Aurora can already ingest, transform, and report. The new problem is coordination: every extra tool boundary slows fixes and gives KPI drift another place to hide.", "That is why **Microsoft Fabric** becomes attractive in the business story. Aurora is not buying a new pattern; it is pulling trusted steps into one governed home while the migration is still manageable."],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 47,
       notes: 39,
       questions: 150,
-      map: 135,
+      map: 200,
       questionsAsked: 2,
       questionCount: 6,
-      mapChanges: 10,
+      mapChanges: 14,
       introduces: ["fabric", "onelake"],
-      needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.2", "12.1"]
+      needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.1", "9.2", "10.1", "10.2", "12.1"]
     },
     caption: "Architecture state after Beat 13.1.",
     diagram: `flowchart LR
   %% Beat 13.1
+  %% retire: bronze, silver, gold, delta, spark
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
@@ -31903,23 +31865,16 @@ const TRACK_BEATS_BY_TRACK = {
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
   etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
   warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
   synsql["Synapse SQL<br/>Analytical serving"]
   reports["Reports<br/>Business outputs"]
-	  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
+  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
+  adf --> onelake
   apps --> sqlplat
   apps -.-> onprem
   cloudapp --> cosmos
@@ -31928,30 +31883,22 @@ const TRACK_BEATS_BY_TRACK = {
   cloudapp --> streaming
   cosmos --> adf
   etl --> warehouse
-  gold --> synsql
+  onelake --> synsql
   semantic --> pbi
-  silver --> delta
-  delta --> gold
-  spark --> silver
   sqlplat --> adf
   storage --> adf
   sqlplat --> etl
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
+  streamproc -->|processed output| onelake
   synsql --> semantic
   warehouse -.-> reports
-
   adf -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
   classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
+  class reports,etl,warehouse,onprem dim;
   class apps,sqlplat,fabric,onelake lensOwned;`
   }, {
     type: "beat",
@@ -31972,41 +31919,31 @@ const TRACK_BEATS_BY_TRACK = {
       story: 132,
       notes: 41,
       questions: 150,
-      map: 110,
+      map: 125,
       questionsAsked: 2,
       questionCount: 7,
-      mapChanges: 9,
+      mapChanges: 10,
       introduces: [],
-      needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.1", "9.2", "10.2", "11.1", "11.2", "13.1"]
+      needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.2", "10.2", "11.1", "11.2", "13.1"]
     },
     caption: "Architecture state after Beat 13.2.",
     diagram: `flowchart LR
   %% Beat 13.2
-  %% retire: onprem, etl, warehouse, reports
+  %% retire: etl, warehouse, reports, onprem
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
-  onprem["On-Prem SQL<br/>Legacy (retired)"]
   sqlplat["SQL Platform<br/>VM / MI / SQL DB"]
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
-  etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
-  warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
-  synsql["Synapse SQL<br/>Analytical serving"]
-  reports["Reports<br/>Business outputs"]
+  synsql["Fabric Warehouse (SQL endpoint)<br/>T-SQL analytical serving"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
   apps --> sqlplat
-  apps -.-> onprem
   cloudapp --> cosmos
   cloudapp --> storage
   cloudapp --> sqlplat
@@ -32014,36 +31951,21 @@ const TRACK_BEATS_BY_TRACK = {
   sqlplat --> adf
   storage --> adf
   cosmos --> adf
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
-  spark --> silver
-  silver --> delta
-  delta --> gold
-  gold --> synsql
+  streamproc -->|processed output| onelake
+  adf --> onelake
+  onelake --> synsql
   synsql --> semantic
   semantic --> pbi
-  sqlplat -.-> etl
-  etl -.-> warehouse
-  warehouse -.-> reports
-
   adf -.-> fabric
   streamproc -.-> fabric
-  spark -.-> fabric
+  onelake -.-> fabric
   synsql -.-> fabric
   semantic -.-> fabric
   pbi -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
-  classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
   class apps,sqlplat,fabric,onelake lensOwned;`
   }],
@@ -33504,21 +33426,21 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["By 2024, Mateo’s problem is no longer one bad metric. It is too many places where ownership can blur and a KPI can quietly fork.", "Fabric only helps him if semantic ownership moves with the assets. He wants one governed home where tables, serving, and meaning can still be traced together."],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 39,
       notes: 39,
       questions: 150,
-      map: 155,
+      map: 210,
       questionsAsked: 2,
       questionCount: 6,
-      mapChanges: 11,
+      mapChanges: 15,
       introduces: ["fabric", "onelake"],
-      needsFirst: ["2.1", "2.2", "7.1", "7.2", "8.1", "8.2", "12.1"]
+      needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.1", "9.2", "10.1", "10.2", "12.1"]
     },
     caption: "Architecture state after Beat 13.1.",
     diagram: `flowchart LR
   %% Beat 13.1
-  %% retire: etl, warehouse
+  %% retire: bronze, silver, gold, delta, spark
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   onprem["On-Prem SQL<br/>OLTP transaction store"]
   cloudapp["New App<br/>Cloud-native branch"]
@@ -33527,14 +33449,9 @@ const TRACK_BEATS_BY_TRACK = {
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
   etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
   warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
   synsql["Synapse SQL<br/>Analytical serving"]
   reports["Reports<br/>Business outputs"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
@@ -33542,10 +33459,8 @@ const TRACK_BEATS_BY_TRACK = {
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (ADLS Gen2)"]
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
+  adf --> onelake
   apps --> sqlplat
   onprem -.-> sqlplat
   cloudapp --> cosmos
@@ -33554,34 +33469,25 @@ const TRACK_BEATS_BY_TRACK = {
   cloudapp --> streaming
   cosmos --> adf
   etl --> warehouse
-  gold --> synsql
-  governance -.-> gold
+  onelake --> synsql
+  governance -.-> onelake
   ops -.-> adf
   ops -.-> synsql
   semantic --> pbi
-  silver --> delta
-  delta --> gold
-  spark --> delta
-  spark --> silver
   sqlplat --> adf
   storage --> adf
   sqlplat --> etl
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
+  streamproc -->|processed output| onelake
   synsql --> semantic
   warehouse -.-> reports
-
   adf -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
   classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class onprem,reports,etl,warehouse dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
+  class onprem,reports,etl,warehouse dim;
   class semantic,pbi lensOwned;`
   }, {
     type: "beat",
@@ -33598,46 +33504,37 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["With Fabric live end to end, a definition mistake can travel farther before anyone notices.", "Mateo uses the unified platform to make meaning more visible, not less. Ownership, certification, and promotion stay explicit so one platform still tells one trustworthy story.", "Fabric does not replace Aurora's transactional systems in this step; SQL Platform, Cosmos DB, file storage, and streaming stay upstream while Mateo governs one unified analytics path.", "**Microsoft Fabric — Aurora's active service map:**\n- **Lakehouse** — Delta tables on OneLake, accessible via Spark and a SQL analytics endpoint\n- **Warehouse** — dedicated SQL-only analytical store within Fabric\n- **Data Factory (in Fabric)** — pipelines for data movement\n- **Notebooks** — Spark-based Python/Scala/R/SQL notebooks with OneLake integration\n- **Power BI** — natively integrated semantic models and reports\n- **OneLake** — single logical data lake underlying all Fabric workloads\n- **Shortcuts** — virtual mount points referencing data in ADLS Gen2 / AWS S3 / GCS *without copying it*\n- **Direct Lake mode** — Power BI reads Delta tables from OneLake directly: Import mode speed + DirectQuery freshness, no scheduled refresh"],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 94,
       notes: 41,
       questions: 150,
-      map: 50,
+      map: 125,
       questionsAsked: 2,
       questionCount: 7,
-      mapChanges: 5,
+      mapChanges: 10,
       introduces: [],
-      needsFirst: ["9.1", "9.2", "11.1", "11.2", "12.1", "13.1"]
+      needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.2", "11.1", "11.2", "12.1", "13.1"]
     },
     caption: "Architecture state after Beat 13.2.",
     diagram: `flowchart LR
   %% Beat 13.2
+  %% retire: etl, warehouse, reports, onprem
   apps["Aurora Apps<br/>Orders / inventory / billing"]
-  onprem["On-Prem SQL<br/>OLTP transaction store"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
   sqlplat["SQL Platform<br/>VM / MI / SQL DB"]
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
-  etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
-  warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
-  synsql["Synapse SQL<br/>Analytical serving"]
-  reports["Reports<br/>Business outputs"]
+  synsql["Fabric Warehouse (SQL endpoint)<br/>T-SQL analytical serving"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (ADLS Gen2)"]
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
   apps --> sqlplat
-  onprem -.-> sqlplat
   cloudapp --> cosmos
   cloudapp --> sqlplat
   cloudapp --> storage
@@ -33645,40 +33542,24 @@ const TRACK_BEATS_BY_TRACK = {
   cosmos --> adf
   sqlplat --> adf
   storage --> adf
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
-  spark --> silver
-  spark --> delta
-  silver --> delta
-  delta --> gold
-  gold --> synsql
+  streamproc -->|processed output| onelake
+  adf --> onelake
+  onelake --> synsql
   synsql --> semantic
   semantic --> pbi
-  governance -.-> gold
+  governance -.-> onelake
   governance -.-> semantic
   ops -.-> adf
   ops -.-> synsql
-  sqlplat -.-> etl
-  etl --> warehouse
-  warehouse -.-> reports
-
   adf -.-> fabric
-  spark -.-> fabric
+  onelake -.-> fabric
   synsql -.-> fabric
   semantic -.-> fabric
   pbi -.-> fabric
   fabric --> onelake
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
 
-  classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class onprem,reports,etl,warehouse dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
   class semantic,pbi lensOwned;`
   }],
@@ -35116,20 +34997,21 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["By 2024, Aurora has enough tools. The real drag is the handoff between them.", "Nia moves into **Microsoft Fabric** to shorten that path, but she migrates in rings and keeps ingest, transform, serve, and publish boundaries visible."],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 34,
       notes: 39,
       questions: 150,
-      map: 125,
+      map: 210,
       questionsAsked: 2,
       questionCount: 6,
-      mapChanges: 9,
+      mapChanges: 15,
       introduces: ["fabric", "onelake"],
-      needsFirst: ["7.1", "7.2", "8.1", "8.2", "12.1"]
+      needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.1", "9.2", "10.1", "10.2", "12.1"]
     },
     caption: "Architecture state after Beat 13.1.",
     diagram: `flowchart LR
   %% Beat 13.1
+  %% retire: bronze, silver, gold, delta, spark
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
@@ -35138,14 +35020,9 @@ const TRACK_BEATS_BY_TRACK = {
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
   etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
   warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
   synsql["Synapse SQL<br/>Analytical serving"]
   reports["Reports<br/>Business outputs"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
@@ -35153,10 +35030,8 @@ const TRACK_BEATS_BY_TRACK = {
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
+  adf --> onelake
   apps --> sqlplat
   cloudapp --> cosmos
   cloudapp --> storage
@@ -35164,35 +35039,26 @@ const TRACK_BEATS_BY_TRACK = {
   cloudapp --> streaming
   cosmos --> adf
   etl --> warehouse
-  delta --> gold
-  gold --> synsql
-  governance -.-> gold
+  onelake --> synsql
+  governance -.-> onelake
   ops -.-> adf
   ops -.-> synsql
   semantic --> pbi
-  silver --> delta
-  spark --> delta
-  spark --> silver
   sqlplat --> adf
   storage --> adf
   sqlplat --> etl
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
+  streamproc -->|processed output| onelake
   synsql --> semantic
   warehouse -.-> reports
-
   adf -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
   classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
-  class adf,bronze,silver,gold,spark lensOwned;`
+  class reports,etl,warehouse,onprem dim;
+  class adf lensOwned;`
   }, {
     type: "beat",
     m: "Milestone 13 (2024) - Consolidation: Switch to Microsoft Fabric (Holistic Analytics)",
@@ -35212,41 +35078,32 @@ const TRACK_BEATS_BY_TRACK = {
       story: 95,
       notes: 41,
       questions: 150,
-      map: 45,
+      map: 95,
       questionsAsked: 2,
       questionCount: 7,
-      mapChanges: 4,
+      mapChanges: 7,
       introduces: [],
-      needsFirst: ["8.2", "9.2", "11.1", "12.1", "12.2", "13.1"]
+      needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.2", "11.1", "12.2", "13.1"]
     },
     caption: "Architecture state after Beat 13.2.",
     diagram: `flowchart LR
   %% Beat 13.2
-  %% retire: synsql
+  %% retire: etl, warehouse, reports, onprem
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
-  onprem["On-Prem SQL<br/>Legacy (retired)"]
   sqlplat["SQL Platform<br/>VM / MI / SQL DB"]
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
-  etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
-  warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
-  synsql["Synapse SQL<br/>Analytical serving"]
-  reports["Reports<br/>Business outputs"]
+  synsql["Fabric Warehouse (SQL endpoint)<br/>T-SQL analytical serving"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (built on ADLS Gen2)"]
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
   apps --> sqlplat
   cloudapp --> cosmos
   cloudapp --> storage
@@ -35255,39 +35112,22 @@ const TRACK_BEATS_BY_TRACK = {
   sqlplat --> adf
   cosmos --> adf
   storage --> adf
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
-  spark --> silver
-  spark --> delta
-  silver --> delta
-  delta --> gold
-  gold --> semantic
+  streamproc -->|processed output| onelake
+  adf --> onelake
+  onelake --> semantic
   semantic --> pbi
-  gold -.-> synsql
+  onelake -.-> synsql
   synsql -.-> semantic
-  sqlplat --> etl
-  etl --> warehouse
-  warehouse -.-> reports
-  governance -.-> gold
   governance -.-> onelake
   ops -.-> adf
   ops -.-> fabric
-
   adf --> fabric
   fabric --> onelake
-  bronze --> onelake
-  silver --> onelake
-  delta --> onelake
-  gold --> onelake
 
-  classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class reports,etl,warehouse,onprem,synsql dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
-  class adf,bronze,silver,gold,spark,fabric lensOwned;`
+  class adf,fabric lensOwned;`
   }],
   "dba": [{
     type: "beat",
@@ -36748,20 +36588,21 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["By 2024, Aurora’s admin surfaces are scattered enough that even good governance feels fragmented.", "Priya treats **Microsoft Fabric** as a governance migration first: workspace policy, data access, and audit expectations move before production workloads do."],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 30,
       notes: 39,
       questions: 150,
-      map: 125,
+      map: 210,
       questionsAsked: 2,
       questionCount: 6,
-      mapChanges: 9,
+      mapChanges: 15,
       introduces: ["fabric", "onelake"],
-      needsFirst: ["7.1", "7.2", "8.1", "8.2", "12.1"]
+      needsFirst: ["7.1", "7.2", "8.1", "8.2", "9.1", "9.2", "10.1", "10.2", "12.1"]
     },
     caption: "Architecture state after Beat 13.1.",
     diagram: `flowchart LR
   %% Beat 13.1
+  %% retire: bronze, silver, gold, delta, spark
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
@@ -36770,25 +36611,18 @@ const TRACK_BEATS_BY_TRACK = {
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
   etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
   warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
   synsql["Synapse SQL<br/>Analytical serving"]
   reports["Reports<br/>Business outputs"]
-	  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
+  semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (ADLS Gen2)"]
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
+  adf --> onelake
   apps --> sqlplat
   onprem -.-> sqlplat
   cloudapp --> cosmos
@@ -36797,34 +36631,25 @@ const TRACK_BEATS_BY_TRACK = {
   cloudapp --> streaming
   cosmos --> adf
   etl --> warehouse
-  gold --> synsql
-  governance -.-> gold
+  onelake --> synsql
+  governance -.-> onelake
   ops -.-> adf
   ops -.-> synsql
   semantic --> pbi
-  silver --> delta
-  delta --> gold
-  spark --> silver
-  spark --> delta
   sqlplat --> adf
   storage --> adf
   sqlplat --> etl
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
+  streamproc -->|processed output| onelake
   synsql --> semantic
   warehouse -.-> reports
-
   adf -.-> fabric
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
   classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class onprem,reports,etl,warehouse dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
+  class onprem,reports,etl,warehouse dim;
   class sqlplat,cosmos,governance lensOwned;`
   }, {
     type: "beat",
@@ -36841,46 +36666,37 @@ const TRACK_BEATS_BY_TRACK = {
     },
     story: ["Once everything lives in one stack, drift can spread faster too. Priya loses the comfort of separate admin planes catching each other’s mistakes, so a bad permission or silent failure can now move further before anyone notices.", "She keeps governance active through recurring access reviews, monitoring drills, and restore rehearsals instead of declaring consolidation “done.” That final safeguard is operational, not theoretical: Aurora finishes with one stack only because Priya keeps proving it can still detect drift, explain access, and recover under pressure.", "That consolidation applies to the analytics plane, not to Aurora’s operational databases themselves, so Priya still keeps SQL Platform, Cosmos DB, file storage, and streaming governed as upstream sources into Fabric.", "**Microsoft Fabric — Aurora's active service map:**\n- **Lakehouse** — Delta tables on OneLake, accessible via Spark and SQL analytics endpoint\n- **Warehouse** — dedicated SQL-only analytical store within Fabric\n- **Data Factory (in Fabric)** — pipelines for data movement\n- **Notebooks** — Spark-based Python/Scala/R/SQL notebooks with OneLake integration\n- **Power BI** — natively integrated semantic models and reports\n- **OneLake** — single logical data lake underlying all Fabric workloads\n- **Shortcuts** — virtual mount points referencing data in ADLS Gen2 / AWS S3 / GCS *without copying*\n- **Direct Lake mode** — Power BI reads Delta tables from OneLake directly: Import speed + DirectQuery freshness"],
     teaching: {
-      minutes: 6,
+      minutes: 7,
       story: 113,
       notes: 41,
       questions: 150,
-      map: 50,
+      map: 125,
       questionsAsked: 2,
       questionCount: 7,
-      mapChanges: 5,
+      mapChanges: 10,
       introduces: [],
-      needsFirst: ["9.1", "9.2", "11.2", "12.1", "12.2", "13.1"]
+      needsFirst: ["1.1", "1.2", "2.1", "2.2", "9.2", "11.2", "12.1", "12.2", "13.1"]
     },
     caption: "Architecture state after Beat 13.2.",
     diagram: `flowchart LR
   %% Beat 13.2
+  %% retire: etl, warehouse, reports, onprem
   apps["Aurora Apps<br/>Orders / inventory / billing"]
   cloudapp["New App<br/>Cloud-native branch"]
   streaming["Event Hubs / IoT Hub<br/>Streaming ingest"]
-  onprem["On-Prem SQL<br/>Legacy (retired)"]
   sqlplat["SQL Platform<br/>VM / MI / SQL DB"]
   storage["Blob / Files / Table<br/>Storage pattern group"]
   cosmos["Cosmos DB<br/>Operational NoSQL"]
-  etl["Batch ETL<br/>Batch load path"]
-  adf["Fabric Data Factory (Pipelines)<br/>Orchestration / copy"]
+  adf["Fabric Data Factory (Pipelines)<br/>Fabric-native orchestration"]
   streamproc["Stream Analytics / Spark<br/>Stream processing"]
-  warehouse["Warehouse<br/>Historical OLAP store"]
-  bronze["Bronze (ADLS Gen2)<br/>Raw landing layer"]
-  silver["Silver<br/>Cleaned / standardized"]
-  delta["Delta Tables<br/>ACID lakehouse table contract"]
-  gold["Gold<br/>Business-ready"]
-  spark["Spark<br/>Transform engine"]
-  synsql["Synapse SQL<br/>Analytical serving"]
-  reports["Reports<br/>Business outputs"]
+  synsql["Fabric Warehouse (SQL endpoint)<br/>T-SQL analytical serving"]
   semantic["Power BI Semantic Model (Dataset)<br/>Measures • hierarchies • RLS"]
   pbi["Power BI<br/>Reports / dashboards"]
   governance["Governance Overlay<br/>Purview • RBAC • Managed ID"]
   ops["Ops Overlay<br/>Key Vault • Monitor"]
   fabric["Microsoft Fabric<br/>Unified analytics workspace"]
-  onelake["OneLake<br/>Unified lake storage (ADLS Gen2)"]
+  onelake["Fabric Lakehouse (OneLake)<br/>Bronze • Silver • Gold as Delta"]
   apps --> sqlplat
-  onprem -.-> sqlplat
   cloudapp --> sqlplat
   cloudapp --> cosmos
   cloudapp --> storage
@@ -36888,40 +36704,24 @@ const TRACK_BEATS_BY_TRACK = {
   sqlplat --> adf
   cosmos --> adf
   storage --> adf
-  streaming -->|raw archive| bronze
+  streaming -->|raw archive| onelake
   streaming --> streamproc
-  streamproc -->|processed output| silver
-  adf --> bronze
-  bronze --> silver
-  bronze --> spark
-  spark --> silver
-  spark --> delta
-  silver --> delta
-  delta --> gold
-  gold --> synsql
+  streamproc -->|processed output| onelake
+  adf --> onelake
+  onelake --> synsql
   synsql --> semantic
   semantic --> pbi
-  sqlplat --> etl
-  etl --> warehouse
-  warehouse -.-> reports
-
   adf -.-> fabric
-  spark -.-> fabric
+  onelake -.-> fabric
   synsql -.-> fabric
   pbi -.-> fabric
   governance -.-> fabric
   ops -.-> fabric
-  governance -.-> gold
+  governance -.-> onelake
   ops -.-> adf
   ops -.-> synsql
-  bronze -.-> onelake
-  silver -.-> onelake
-  delta -.-> onelake
-  gold -.-> onelake
   fabric --> onelake
 
-  classDef dim fill:#fbfaf7,stroke:#9a948c,color:#6f665c,stroke-dasharray: 5 4;
-  class onprem,reports,etl,warehouse dim;
   classDef lensOwned stroke:#4f86c6,stroke-width:2.5;
   class sqlplat,cosmos,governance,fabric lensOwned;`
   }]
@@ -39049,6 +38849,14 @@ const diffMermaidGraphs = (prevGraph, currGraph) => {
     if (String(prevRhs).trim() !== String(rhs).trim()) updatedNodes.push(id);
   }
 
+  // Until milestone 13 the map only ever grew, so nothing needed to notice a
+  // box leaving. Consolidation retires nine services into Fabric, and a learner
+  // who is told what arrived but not what left is reading half the change.
+  const retiredNodes = [];
+  for (const id of prevGraph.nodes.keys()) {
+    if (!currGraph.nodes.has(id)) retiredNodes.push(id);
+  }
+
   // An edge key carries its arrow style, so a solid path turning dotted looked
   // like a brand new connection: beat 11.2 announced "Warehouse -> Reports
   // newly connected" at the very moment that path was being demoted to legacy.
@@ -39063,6 +38871,7 @@ const diffMermaidGraphs = (prevGraph, currGraph) => {
   return {
     addedNodes,
     updatedNodes,
+    retiredNodes,
     addedEdges,
     restyledEdges
   };
@@ -40187,6 +39996,86 @@ const META_ZONES = Object.freeze([{
   title: 'Governance',
   ids: ['governance', 'ops']
 }]);
+// Once the batch lane is gone, the services left in the middle are all one
+// product, so they are banded as one. The classic table keeps nine bands for
+// every earlier beat; this one has five, which is the consolidation the story
+// is about made visible. The guard is the legacy boxes rather than the beat id:
+// etl, warehouse and reports sit inside this band's bounding box, so it is only
+// honest once 13.2 has retired them.
+const FABRIC_ERA_ZONES = Object.freeze([{
+  id: 'appsDomain',
+  title: 'Applications',
+  ids: ['cloudapp', 'apps']
+}, {
+  id: 'storesDomain',
+  title: 'Operational stores',
+  ids: ['cosmos', 'storage', 'onprem', 'sqlplat']
+}, {
+  id: 'streamingDomain',
+  title: 'Streaming',
+  ids: ['streaming', 'streamproc']
+}, {
+  id: 'fabricDomain',
+  title: 'Microsoft Fabric',
+  ids: ['adf', 'onelake', 'synsql', 'fabric', 'semantic', 'pbi'],
+  fill: '#f7f8fb',
+  stroke: '#dde4f0'
+}, {
+  id: 'governanceDomain',
+  title: 'Governance',
+  ids: ['governance', 'ops']
+}]);
+const LEGACY_BATCH_IDS = ['etl', 'warehouse', 'reports'];
+
+// Consolidation is a move, not just a deletion. Keeping every surviving box on
+// the grid built for twenty-four of them left the Fabric band mostly empty, so
+// the six services that are now one product are packed into the cells the
+// retired ones vacated. Only those six move: the upstream systems a learner has
+// followed since 2003 stay exactly where they were, which is what makes the
+// movement read as consolidation rather than as a redrawn diagram.
+const FABRIC_ERA_LAYOUT = Object.freeze({
+  // One lane per step of the Fabric flow: pipelines, lakehouse, warehouse,
+  // then the BI chain. streamproc joins Event Hubs in a single streaming column
+  // so the lane that feeds the lakehouse is not sitting in its path -- with it
+  // at col 3 the "raw archive" edge label was drawn underneath its box.
+  streamproc: {
+    col: 2,
+    row: 1
+  },
+  adf: {
+    col: 3,
+    row: 2
+  },
+  onelake: {
+    col: 4,
+    row: 2
+  },
+  fabric: {
+    col: 4,
+    row: 3
+  },
+  synsql: {
+    col: 5,
+    row: 3
+  },
+  semantic: {
+    col: 6,
+    row: 2
+  },
+  pbi: {
+    col: 6,
+    row: 3
+  }
+});
+const isFabricEra = ids => {
+  const present = ids instanceof Set ? ids : new Set(ids || []);
+  return present.has('fabric') && !LEGACY_BATCH_IDS.some(id => present.has(id));
+};
+const layoutTableFor = ids => isFabricEra(ids) ? {
+  ...STABLE_NODE_LAYOUT,
+  ...FABRIC_ERA_LAYOUT
+} : STABLE_NODE_LAYOUT;
+const zonesForPresent = present => present.has('fabric') && !LEGACY_BATCH_IDS.some(id => present.has(id)) ? FABRIC_ERA_ZONES : META_ZONES;
 const ZOOM_STORAGE_KEY = 'dp900.diagram.zoom';
 const PAN_STORAGE_KEY = 'dp900.diagram.pan';
 const parseInlineStyles = styleText => {
@@ -40275,6 +40164,16 @@ const splitLabelLines = (label, isOverlay = false, type = SCREEN_TYPE) => {
   const lines = [...headLines, ...tailLines];
   return lines.slice(0, isOverlay ? 3 : 3);
 };
+
+// A service whose product identity changes mid-story. The needle is matched
+// against the authored diagram label, so the track files stay the source of truth
+// for which era a beat is in; the first match wins, and a label matching nothing
+// falls through to the catalog's short name.
+const ERA_LABELS = Object.freeze({
+  adf: [['fabric data factory', 'Fabric pipelines — Orchestration']],
+  onelake: [['fabric lakehouse', 'Lakehouse — OneLake • Delta']],
+  synsql: [['fabric warehouse', 'Warehouse — SQL endpoint']]
+});
 const compactNodeLabel = (id, label, isOverlay = false) => {
   const raw = String(label || '').replace(/\s+/g, ' ').trim();
   if (!raw) return raw;
@@ -40287,6 +40186,17 @@ const compactNodeLabel = (id, label, isOverlay = false) => {
     if (normalized.includes('vm + mi')) return 'SQL platform — VM • MI';
     if (normalized.includes('vm first')) return 'SQL platform — VM first';
     return 'SQL platform';
+  }
+  // Four more services change identity when Fabric arrives, the way sqlplat
+  // changes across its three milestones: the box is the same box, but the
+  // product it names is not. Their authored diagram label decides which era is
+  // drawn, so they resolve before the catalog's single short name -- which would
+  // otherwise pin them to their Azure-era wording in every beat and make the
+  // consolidation invisible.
+  if (!isOverlay && ERA_LABELS[id]) {
+    for (const [needle, text] of ERA_LABELS[id]) {
+      if (normalized.includes(needle)) return text;
+    }
   }
   // The catalog is the one place a service's short name is decided, so the box,
   // the "On the map" card and the service card always agree.
@@ -40313,9 +40223,7 @@ const compactNodeLabel = (id, label, isOverlay = false) => {
     };
     return overlayLabels[id] || raw;
   }
-  if (id === 'adf') {
-    return normalized.includes('fabric data factory') ? 'Fabric pipelines — Orchestration' : 'ADF — Orchestration';
-  }
+  if (id === 'adf') return 'ADF — Orchestration';
   if (id === 'apps') return 'Aurora Apps — Orders • inventory';
   if (id === 'cloudapp') return 'New App — Cloud-native';
   if (id === 'storage') return 'Storage — Blob • files • table';
@@ -40325,18 +40233,14 @@ const compactNodeLabel = (id, label, isOverlay = false) => {
   if (id === 'silver') return 'Silver — Standardized';
   if (id === 'gold') return 'Gold — Business-ready';
   if (id === 'streamproc') return 'Stream proc — ASA / Spark';
-  if (id === 'synsql') {
-    return normalized.includes('fabric warehouse') ? 'Warehouse / SQL endpoint' : 'Synapse SQL — Serving';
-  }
+  if (id === 'synsql') return 'Synapse SQL — Serving';
   if (id === 'semantic') return 'Semantic model — Measures/RLS';
   if (id === 'pbi') return 'Power BI — Reports';
   if (id === 'reports') return 'Reports — Business outputs';
   if (id === 'governance') return 'Governance — Purview • access';
   if (id === 'ops') return 'Ops — Secrets • monitor';
   if (id === 'fabric') return 'Fabric — Unified workspace';
-  if (id === 'onelake') {
-    return normalized.includes('fabric lakehouse') ? 'Lakehouse — OneLake • Delta' : 'OneLake — Unified lake';
-  }
+  if (id === 'onelake') return 'OneLake — Unified lake';
   return raw;
 };
 const nodeSortKey = id => {
@@ -40448,11 +40352,11 @@ const CANONICAL_OVERLAY_BOXES = Object.freeze([...OVERLAY_NODE_IDS].map(id => ST
 // column the beat never touches. Squeezing the axes down to the cells actually
 // in frame is what buys the extra scale the type needs; the left-to-right and
 // top-to-bottom order the story depends on is preserved exactly.
-const compactAxisMaps = ids => {
+const compactAxisMaps = (ids, table = STABLE_NODE_LAYOUT) => {
   const cols = new Set();
   const rows = new Set();
   for (const id of ids || []) {
-    const layout = STABLE_NODE_LAYOUT[id];
+    const layout = table[id];
     if (!layout) continue;
     cols.add(layout.col);
     rows.add(layout.row);
@@ -40476,16 +40380,17 @@ const fitBoxesForIds = (ids, options = {}) => {
   const grid = options.grid || GRID;
   const zonePadding = options.zonePadding || ZONE_PADDING;
   const axes = options.axes || null;
+  const table = options.table || layoutTableFor(ids);
   const present = new Set();
   const boxes = [];
-  const boxFor = id => nodeLayoutBox(placeOnAxes(STABLE_NODE_LAYOUT[id], axes), OVERLAY_NODE_IDS.has(id), grid);
+  const boxFor = id => nodeLayoutBox(placeOnAxes(table[id], axes), OVERLAY_NODE_IDS.has(id), grid);
   for (const id of ids || []) {
-    const layout = STABLE_NODE_LAYOUT[id];
+    const layout = table[id];
     if (!layout) continue;
     present.add(id);
     boxes.push(toBox(boxFor(id)));
   }
-  for (const zone of META_ZONES) {
+  for (const zone of zonesForPresent(present)) {
     const members = zone.ids.filter(id => present.has(id));
     if (members.length === 0) continue;
     boxes.push(toBox(zoneBoundsFromMembers(members.map(boxFor), zonePadding)));
@@ -40741,12 +40646,13 @@ const MermaidViewer = React.memo(({
   // that lands a service in a track that was empty. The map opens a lane to
   // make room, which is the growth the map exists to show. A lane held rigid
   // under a label nobody can read shows nothing.
-  const axes = useMemo(() => compactAxisMaps([...new Set([...drawnNodeIds, ...(fitNodeIds || [])])]), [drawnNodeIds, fitNodeIds]);
+  const layoutTable = useMemo(() => layoutTableFor(drawnNodeIds), [drawnNodeIds]);
+  const axes = useMemo(() => compactAxisMaps([...new Set([...drawnNodeIds, ...(fitNodeIds || [])])], layoutTable), [drawnNodeIds, fitNodeIds, layoutTable]);
   const nodeById = useMemo(() => {
     const byId = new Map();
     let fallbackIdx = 0;
     for (const id of drawnNodeIds) {
-      const stable = STABLE_NODE_LAYOUT[id];
+      const stable = layoutTable[id];
       const layout = stable ? placeOnAxes(stable, axes) : {
         col: 1 + fallbackIdx % 5,
         row: 7 + Math.floor(fallbackIdx / 5)
@@ -40779,7 +40685,7 @@ const MermaidViewer = React.memo(({
       });
     }
     return byId;
-  }, [graph, nodeClasses, drawnNodeIds, axes, grid, type]);
+  }, [graph, nodeClasses, drawnNodeIds, axes, grid, type, layoutTable]);
   const changedNodeIds = useMemo(() => new Set(diff?.updatedNodes || []), [diff]);
   const highlightNodeIds = useMemo(() => {
     // Only arrivals. A relabelled node is 'changed' (changedNodeIds); folding it
@@ -40831,14 +40737,14 @@ const MermaidViewer = React.memo(({
       // Detect same-row nodes that would block a horizontal path segment
       const goingRight = to.cx >= from.cx + 8;
       const goingLeft = to.cx <= from.cx - 8;
-      const fromLayout = STABLE_NODE_LAYOUT[edge.from];
+      const fromLayout = layoutTable[edge.from];
       const hasHorizBlockers = (goingRight || goingLeft || nearHorizontal) && fromLayout && (() => {
         const fromRow = fromLayout.row;
         const minX = Math.min(sx, ex);
         const maxX = Math.max(sx, ex);
         for (const [nid, nd] of nodeById.entries()) {
           if (nid === edge.from || nid === edge.to) continue;
-          const nl = STABLE_NODE_LAYOUT[nid];
+          const nl = layoutTable[nid];
           if (!nl || nl.row !== fromRow) continue;
           if (nd.x + nd.width > minX + 4 && nd.x < maxX - 4) return true;
         }
@@ -40907,7 +40813,8 @@ const MermaidViewer = React.memo(({
   }, [nodeById]);
   const activeZones = useMemo(() => {
     const zones = [];
-    for (const zone of META_ZONES) {
+    const present = new Set(nodeById.keys());
+    for (const zone of zonesForPresent(present)) {
       const members = zone.ids.map(id => nodeById.get(id)).filter(Boolean);
       if (members.length === 0) continue;
       zones.push({
@@ -40965,12 +40872,13 @@ const MermaidViewer = React.memo(({
     const frameBoxes = fitBoxesForIds(frameIds, {
       grid,
       zonePadding,
-      axes
+      axes,
+      table: layoutTable
     });
 
     // Nodes with no grid cell are placed by fallback, so frame them from their
     // rendered position or they would sit outside the camera.
-    const strayBoxes = orderedNodes.filter(node => !STABLE_NODE_LAYOUT[node.id]).map(node => toBox(node));
+    const strayBoxes = orderedNodes.filter(node => !layoutTable[node.id]).map(node => toBox(node));
 
     // A role lens parks its scaffold in the bottom rows. Frame the scaffold boxes
     // this lens actually shows; reserving all fourteen possible positions pushed
@@ -40989,7 +40897,7 @@ const MermaidViewer = React.memo(({
       projector,
       minScale: floorCameraScale
     });
-  }, [fitNodeIds, nodeById, orderedNodes, usesOverlayViewport, grid, zonePadding, axes, viewBox, fitPadding, projector, floorCameraScale]);
+  }, [fitNodeIds, nodeById, orderedNodes, usesOverlayViewport, grid, zonePadding, axes, viewBox, fitPadding, projector, floorCameraScale, layoutTable]);
 
   // Smooth animated autoFit transitions between beats (prevents jitter)
   const [animAutoFit, setAnimAutoFit] = useState(() => autoFit);
@@ -43940,7 +43848,7 @@ function DP900MilestoneIntro({
   const lastMilestoneBeatIndex = milestoneBeatEntries[milestoneBeatEntries.length - 1]?.index ?? -1;
   const overviewFitNodeIds = lastMilestoneBeatIndex >= 0 ? cumulativeNodeIdsThrough(lastMilestoneBeatIndex, selectedPerspective) : [];
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "w-full lg:w-2/5 h-auto lg:h-full overflow-y-visible lg:overflow-y-auto border-r border-[#e8e6dc] bg-white p-7 lg:p-9 flex flex-col min-h-0"
+    className: "w-full lg:w-1/3 h-auto lg:h-full overflow-y-visible lg:overflow-y-auto border-r border-[#e8e6dc] bg-white p-7 lg:p-9 flex flex-col min-h-0"
   }, /*#__PURE__*/React.createElement("h1", {
     className: "text-2xl lg:text-3xl font-semibold text-[#141413] mb-1 leading-tight"
   }, "Milestone ", milestoneNum, " Overview"), /*#__PURE__*/React.createElement("p", {
@@ -44061,7 +43969,7 @@ function DP900MilestoneIntro({
   }, "Space"), " or ", /*#__PURE__*/React.createElement("kbd", {
     className: "px-1.5 py-0.5 rounded bg-[#faf9f5] border border-[#e8e6dc] text-[10px] font-mono"
   }, "\u2192"), " to begin")), /*#__PURE__*/React.createElement("div", {
-    className: "w-full lg:w-3/5 h-[50vh] shrink-0 lg:shrink lg:h-full bg-[#faf9f5] relative flex flex-col overflow-hidden"
+    className: "w-full lg:w-2/3 h-[56vh] shrink-0 lg:shrink lg:h-full bg-[#faf9f5] relative flex flex-col overflow-hidden"
   }, /*#__PURE__*/React.createElement("div", {
     className: "absolute top-6 left-6 text-[10px] font-bold uppercase tracking-widest text-[#726f64] z-10 pointer-events-none"
   }, "End-state preview \xB7 build this over ", milestoneBeatEntries.length, " beat", milestoneBeatEntries.length === 1 ? '' : 's'), overviewDiagram ? /*#__PURE__*/React.createElement("div", {
@@ -44922,9 +44830,14 @@ function DP900BeatPanel({
   const nodeShortForDiagram = id => nodeLabelForDiagram(id).split(' — ')[0].trim() || id;
   // What changed on the diagram this beat, named with the catalog's own
   // short labels so the card and the boxes agree.
+  // `compactNodeLabel` is what the box itself is drawn with, era-aware
+  // relabels included. Reading the catalog's fixed short here made the
+  // card say "Synapse SQL — Serving" beside a box reading "Warehouse —
+  // SQL endpoint" at the very beat that renamed it.
   const catalogShort = id => {
     const entry = typeof CATALOG_BY_ID !== 'undefined' ? CATALOG_BY_ID?.[id] : null;
-    return entry?.short || entry?.name || nodeShortForDiagram(id);
+    const drawn = typeof compactNodeLabel === 'function' ? compactNodeLabel(id, nodeLabelForDiagram(id)) : '';
+    return drawn || entry?.short || entry?.name || nodeShortForDiagram(id);
   };
   const mapDeltaItems = (() => {
     const items = [];
@@ -44954,6 +44867,21 @@ function DP900BeatPanel({
         note: afterDetail && beforeDetail && afterDetail !== beforeDetail ? `now reads "${afterDetail}" (was "${beforeDetail}")` : 'changes role on the map',
         fill: '#fdf6e7',
         stroke: '#c99a3f'
+      });
+    }
+    // A box that leaves the map. Naming it is the point of the
+    // consolidation: the learner should be able to read what this step
+    // removed, not only what it added. The note stays neutral because
+    // the reasons differ -- the medallion layers are absorbed into the
+    // lakehouse, while the on-prem server is simply switched off -- and
+    // the beat's own story says which.
+    for (const id of (diagramDiff.retiredNodes || []).filter(x => x && x !== 'apps')) {
+      items.push({
+        key: `ret:${id}`,
+        label: catalogShort(id),
+        note: 'retired at this step',
+        fill: '#f4f3ef',
+        stroke: '#9a948c'
       });
     }
     const edges = [...new Set(diagramDiff.addedEdges || [])].map(idx => currGraph?.edges?.[idx]).filter(Boolean).filter(e => !added.includes(e.from) || !added.includes(e.to));
@@ -45757,7 +45685,7 @@ function DP900BeatPanel({
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     ref: beatPanelScrollRef,
     "data-beat-left-panel": "true",
-    className: "w-full lg:w-2/5 h-auto lg:h-full overflow-y-visible lg:overflow-y-auto border-r border-[#e8e6dc] bg-white p-7 lg:p-9 flex flex-col min-h-0"
+    className: "w-full lg:w-1/3 h-auto lg:h-full overflow-y-visible lg:overflow-y-auto border-r border-[#e8e6dc] bg-white p-7 lg:p-9 flex flex-col min-h-0"
   }, /*#__PURE__*/React.createElement("p", {
     className: "text-[10px] font-bold uppercase tracking-widest text-[#726f64] mb-1.5"
   }, milestoneBreadcrumb), /*#__PURE__*/React.createElement("h1", {
@@ -46305,7 +46233,7 @@ function DP900BeatPanel({
   }, "Import review file")), /*#__PURE__*/React.createElement("p", {
     className: "mt-1 text-[10px] text-[#726f64]"
   }, "Comments autosave in this browser. Use `Download reviewed HTML` before handing the file to someone else; reopening that reviewed HTML restores the embedded comments."))))), /*#__PURE__*/React.createElement("div", {
-    className: "w-full lg:w-3/5 h-[50vh] shrink-0 lg:shrink lg:h-full bg-[#faf9f5] relative flex flex-col overflow-hidden"
+    className: "w-full lg:w-2/3 h-[56vh] shrink-0 lg:shrink lg:h-full bg-[#faf9f5] relative flex flex-col overflow-hidden"
   }, /*#__PURE__*/React.createElement("div", {
     className: "absolute top-3 sm:top-6 left-4 sm:left-6 text-[10px] font-bold uppercase tracking-widest text-[#726f64] z-10 pointer-events-none"
   }, "Architecture Pipeline State"), /*#__PURE__*/React.createElement("div", {
